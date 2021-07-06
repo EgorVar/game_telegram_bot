@@ -1,0 +1,29 @@
+{
+  "name": "node_bot_game",
+  "version": "1.0.0",
+  "description": "game telegram bot",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EgorVar/game_telegram_bot.git"
+  },
+  "keywords": [
+    "game",
+    "bot",
+    "telegram"
+  ],
+  "author": "avecoder",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EgorVar/game_telegram_bot/issues"
+  },
+  "homepage": "https://github.com/EgorVar/game_telegram_bot#readme",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.53.0",
+    "nodemon": "^2.0.9"
+  }
+}
