@@ -1,10 +1,13 @@
 const TelegramApi = require('node-telegram-bot-api')
 
 
+const sequelize = require('./db')
+
 const {gameOptions, againOptions} = require('./options')
 
 const token = '1842684909:AAGW56fUQROQRoy3Z5R9J7AthJSd4lXIf5M'
 
+const UserModel = require('./model')
 
 const bot = new TelegramApi(token, {polling: true})
 
@@ -24,26 +27,46 @@ const startGame = async (chatId) => {
   await bot.sendMessage(chatId, 'Отгадывай', gameOptions)
 }
 
-const start = () => {
+const start = async () => {
+
+  try {
+    await sequelize.authenticate()
+    await sequelize.sync()
+  } catch (e) {
+    console.log('Подключение к бд сломалось', e)
+  }
+
+
+
+
   bot.on('message', async msg => {
     const text = msg.text
     const chatId = msg.chat.id
 
+    try {
+      if(text === '/start') {
+        await UserModel.create({chatId})
+        await bot.sendSticker(chatId, 'https://tlgrm.ru/_/stickers/c62/4a8/c624a88d-1fe3-403a-b41a-3cdb9bf05b8a/3.webp')
+        return bot.sendMessage(chatId, 'Добро Пожаловать в телеграм бот')
+      }
 
-    if(text === '/start') {
-      await bot.sendSticker(chatId, 'https://tlgrm.ru/_/stickers/c62/4a8/c624a88d-1fe3-403a-b41a-3cdb9bf05b8a/3.webp')
-      return bot.sendMessage(chatId, 'Добро Пожаловать в телеграм бот')
+      if(text === '/info') {
+        const user = await UserModel.findOne({chatId})
+        return bot.sendMessage(chatId, `Тебя зовут ${msg.from.first_name}, в игре у тебя правильных ответов ${user.right}, неправильных ответов ${user.wrong}`)
+
+      }
+
+      if(text === '/game') {
+        return startGame(chatId)
+      }
+      return bot.sendMessage(chatId, 'Я тебя не понимаю, попробуй еще раз!)')
+
+    } catch (e) {
+      return bot.sendMessage(chatId, `Произошла ошибка - ${e}`)
     }
 
-    if(text === '/info') {
-      return bot.sendMessage(chatId, `Тебя зовут ${msg.from.first_name}`)
-    }
 
-    if(text === '/game') {
-      return startGame(chatId)
-    }
 
-    return bot.sendMessage(chatId, 'Я тебя не понимаю, попробуй еще раз!)')
   })
 }
 
@@ -56,11 +79,17 @@ bot.on('callback_query', async msg => {
     return startGame(chatId)
   }
 
+  const user = await UserModel.findOne({chatId})
+
   if(data == chats[chatId]) {
-    return bot.sendMessage(chatId, `Поздравляем, ты отгадал цифру ${chats[chatId]}`, againOptions)
+    user.right++
+    await bot.sendMessage(chatId, `Поздравляем, ты отгадал цифру ${chats[chatId]}`, againOptions)
   } else {
-    return bot.sendMessage(chatId, `К сожалению ты не угадал, бот загадал цифру ${chats[chatId]}`, againOptions)
+    user.wrong++
+    await bot.sendMessage(chatId, `К сожалению ты не угадал, бот загадал цифру ${chats[chatId]}`, againOptions)
   }
+
+  await user.save()
 })
 
 start()

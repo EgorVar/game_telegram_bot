@@ -24,6 +24,9 @@
   "homepage": "https://github.com/EgorVar/game_telegram_bot#readme",
   "dependencies": {
     "node-telegram-bot-api": "^0.53.0",
-    "nodemon": "^2.0.9"
+    "nodemon": "^2.0.9",
+    "pg": "^8.6.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.6.5"
   }
 }
